@@ -3,7 +3,7 @@ function tree = decisiontree(data,colnames,classindex,method)
 %NOTE:every Ordinal property should be quantize to keep ordinal information
 %in calculation.For example:small,medium,big->1,2,3(2,1,3 is not allowed).
 %Variable Defination:
-%   data        sample data,size 1*N cell, each row in cell stand for one observation.
+%   data        sample data,size M*N cell, each row in cell stand for one observation.
 %   colnames     1*M cell,stores Attribute names responding to every column in data.
 %   classindex  specify which column in data representative Category info.
 %   tree        decision tree generated based on data.
@@ -13,21 +13,12 @@ function tree = decisiontree(data,colnames,classindex,method)
 
 % data=textscan(fileid,'%s %f %f %f %f %f %f %f %d','Delimiter',',');
 
-tmp = cell(length(data{1}),length(data));
-for ii=1:length(data)
-    if isnumeric(data{ii});
-        tmp(:,ii)=num2cell(data{ii});
-    else
-        tmp(:,ii)=data{ii};
-    end
-end
-data=tmp;
-tree=data;
-%tree = treegrowth(data,colnames,classindex);
+
+tree = treegrowth(data,colnames,classindex,method);
 
 end
 
-function node=treegrowth(data,colsleft,classindex) 
+function node=treegrowth(data,colsleft,classindex,method) 
     if teststop(data,colsleft,classindex)==true
         node = struct();
         node.type = 'leaf';
@@ -35,16 +26,16 @@ function node=treegrowth(data,colsleft,classindex)
     else
         node = struct();
         node.type = 'node';
-        [root.attributeindex,root.cond] = findbestsplitattribute(data,colsleft,classindex,method);
-        root.attributename = colsleft{attributeindex};
+        [node.attributeindex,node.cond] = findbestsplitattribute(data,colsleft,classindex,method);
+        node.attributename = colsleft{attributeindex};
         
         %remove colname used!!
         colsleft(:,attributeindex)=[];
         %remove rowdata for each child
         [datal,datar] = splitdata(data,colsleft,classindex);
         
-        root.leftchild = treegrowth(datal,colsleft,classindex);
-        root.rightchild = treegrowth(datar,colsleft,classindex);
+        node.leftchild = treegrowth(datal,colsleft,classindex);
+        node.rightchild = treegrowth(datar,colsleft,classindex);
     end
 end
 
@@ -90,7 +81,7 @@ function stop = teststop(data,colsleft,classindex)
         stop = true;
     elseif size(getcountincol(data(:,classindex)),1)==1 %belongs to same class
         stop = true;
-    elseif iseveryrowequal((data(1,[1:end-1,end+1:end])))   %same value,exclude category column
+    elseif iseveryrowequal((data(:,[1:end-1,end+1:end])))   %same value,exclude category column
         %compare every column except classindex for every row 
         stop = true;
     end
@@ -146,11 +137,11 @@ impuritybeforesplitting = calculateimpurity(data(:,colindex),method);
 if isnumeric(data{1,colindex}) == true
     value_ig_mat = cell(size(count-1,1),2);
     %sort
-    [~,index] = sort(cell2mat(count(:,end)));
+    [~,index] = sort(cell2mat({count(:,end)}));
     count = count(index,:);
     %calculate for every internal
     for ii = 1:size(count,1)-1
-        value_ig_mat{ii,1} = mean([count{ii,1},count{ii+1,1}]);
+        value_ig_mat{ii,1} = mean([count(ii,1),count(ii+1,1)]);
         [datal,datar] = splitdata(data,colindex,value_ig_mat{ii,1});
         value_ig_mat{ii,2} = impuritybeforesplitting-...
             +(calculateimpurity(datal(:,colindex),method)*size(datal,1)...
@@ -174,7 +165,7 @@ else
     end
 end
 
-[ig,index] = max(value_ig_mat(:,2));
+[ig,index] = max(cell2mat(value_ig_mat(:,2)));
 value = value_ig_mat(index,1);
 
 
@@ -196,11 +187,11 @@ switch (lower(method))
     case 'gini'%for part
         %count representative a part of vlaues in data responding to classindex
         %use count=getcountincol(data(find(data(:,colindex)<=value),classindex)) to get
-        calculate=@(count)(1-sum(count(:,end).^2));
+        calculate=@(count)(1-sum(cell2mat(count(:,end)).^2));
     case 'entropy'
-        calculate=@(count)(-sum(count(:,end).*log2(count(:,3))));
+        calculate=@(count)(-sum(cell2mat(count(:,end)).*log2(cell2mat(count(:,end)))));
     case 'classificationerror'
-        calculate=@(count)(1-max(count(:,end)));
+        calculate=@(count)(1-max(cell2mat(count(:,end))));
     otherwise
         disp('method not match');
 end
