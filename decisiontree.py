@@ -1,5 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Sun Nov 19 21:54:42 2016
+
+@author: Jeiel
+"""
 
 class DecisionNode:
     def __init__(self, feature = None, impurity = None, cond = None, leftchild = None, rightchild = None, nodetype = None, label = None, method = None):
