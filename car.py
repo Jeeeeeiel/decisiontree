@@ -6,7 +6,6 @@ Created on Sun Nov 20 19:51:14 2016
 @author: Jeiel
 """
 
-import decisiontree as dt
 from evaluation import test
 
 #Attribute Values:
@@ -29,7 +28,7 @@ from evaluation import test
 
 
 if __name__ == '__main__':
-    print('test data: car.data')
+    print('file: car.data')
     
     data = []   
     with open('car.data', 'r') as f:
@@ -63,6 +62,6 @@ if __name__ == '__main__':
 #    
 #    accuracy = 1 - errorcount / len(data)
 #    print('accuracy: ', accuracy)
-    test(data = data, featurenames = featurenames, preprune = False, postprune = False, threshold = 0.0)
+    test(data = data, featurenames = featurenames, adaboostOn = False, preprune = False, postprune = False, threshold = 0.5)
 
     print('done')
