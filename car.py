@@ -7,6 +7,7 @@ Created on Sun Nov 20 19:51:14 2016
 """
 
 import decisiontree as dt
+from evaluation import test
 
 #Attribute Values:
 #
@@ -28,7 +29,8 @@ import decisiontree as dt
 
 
 if __name__ == '__main__':
-    print('training...')
+    print('test data: car.data')
+    
     data = []   
     with open('car.data', 'r') as f:
         data = [line.split(',') for line in f]
@@ -51,15 +53,16 @@ if __name__ == '__main__':
     featurenames = ['buying', 'maint', 'doors', 'persons' ,'lug_boot', 'safety', 'class']
     method = 'gini' #'gini','entropy','classificationerror'
     
-    tree = dt.train(data, featurenames, method)
-    
-    errorcount = 0
-    for row in data:
-        row.append(dt.classifyobj(tree, row, featurenames))
-        if row[-2] != row[-1]:
-            errorcount += 1
-    
-    accuracy = 1 - errorcount / len(data)
-    print('accuracy: ', accuracy)
-    
+#    tree = dt.train(data, featurenames, method)
+#    
+#    errorcount = 0
+#    for row in data:
+#        row.append(dt.classifyobj(tree, row, featurenames))
+#        if row[-2] != row[-1]:
+#            errorcount += 1
+#    
+#    accuracy = 1 - errorcount / len(data)
+#    print('accuracy: ', accuracy)
+    test(data = data, featurenames = featurenames, preprune = False, postprune = False, threshold = 0.0)
+
     print('done')
