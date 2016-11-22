@@ -16,8 +16,8 @@ if __name__ == '__main__':
     data = [list(map(int,row[1:8]))+[row[0]] for row in data]
 
     featurenames = ['Left-Weight', 'Left-Distanc', 'Right-Weight', 'Right-Distance', 'Class Name'] 
-    method = 'gini' #'gini','entropy','classificationerror'
+    method = 'entropy' #'gini','entropy','classificationerror'
     
-    test(data = data, featurenames = featurenames, adaboostOn = False, preprune = False, postprune = False, threshold = 0.5)
+    test(data = data, featurenames = featurenames, adaboostOn = True, k=50, preprune = False, postprune = False, threshold = 0.1)
     
     print('done')

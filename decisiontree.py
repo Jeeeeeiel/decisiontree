@@ -65,7 +65,7 @@ def findbestsplitattr(parentimpurity, data, method):
     max_ig = max(igdict.items(),key = lambda item:item[1][1]) #find the item with biggest ig
     
 #    print('bestattr: ', max_ig[0], ', cond: ', max_ig[1][0], ', impurity: ', impurity)
-    return(max_ig[0], max_ig[1][0],igdict[1][1]) #index,value,ig
+    return(max_ig[0], max_ig[1][0],max_ig[1][1]) #index,value,ig
     
 def findbestcond(data, col, method):     #return value,impurity
     from collections import Counter
@@ -133,6 +133,14 @@ def treegrowth(data, featureleft, method, preprune, threshold):
 #        if len(data) <=4:
 #            print('data1: ', data1)
 #            print('data2: ', data2)
+        if len(data1)==0 or len(data2)==0:#the col for splite is only one unique value,not fixed yet,still dont know why
+            print(len(data1))
+            print(data1)
+            print(len(data2))
+            print(data2)
+            print(node.feature)
+            print(featureindex)
+            print(featureleft)
         #remove column in data
         data1 = [[row[i] for i in range(0, len(data1[0])) if i != featureindex] for row in data1 ]
         data2 = [[row[i] for i in range(0, len(data2[0])) if i != featureindex] for row in data2 ]
@@ -145,7 +153,7 @@ def treegrowth(data, featureleft, method, preprune, threshold):
 def teststop(data):
     if len({row[-1] for row in data }) == 1:    #same category
         return True;
-    elif len({tuple(row[:-2]) for row in data }) == 1:   #same attrs
+    elif len({tuple(row[:-1]) for row in data }) == 1:   #same attrs exclude category
         return True;
     elif len(data[0]) == 1:   #no attr left except category
         return True;
@@ -185,12 +193,13 @@ def postpruning(node, penalty = 0.5):  #Pessimistic error
         errorcount = sum([row[-1] != label for row in node.data])
         peafterprune = (errorcount + penalty) / len(node.data)
         
-        if peafterprune < pebeforeprune:
+        if peafterprune <= pebeforeprune:
 #            print(peafterprune,pebeforeprune,childleafcount,childerrorcount,errorcount)
             node.nodetype = 'leaf'
             node.label = label
             node.leftchild = None
             node.rightchild = None
+#            print('pruned!:', node.leftchild,' ',node.rightchild)
             return(errorcount, 1)
         else:
             return(childleafcount, childerrorcount)
@@ -253,6 +262,7 @@ def classifydataforclassifier(classifiers, alpha, testdata, featurenames):
     tmpresults = []#[[label,label,...],...]  
     errorcount = 0
     results = []
+    
     for classifier in classifiers:
         tmpresult = classifydata(classifier, testdata, featurenames)[0]
         tmpresults.append(tmpresult)
@@ -260,7 +270,8 @@ def classifydataforclassifier(classifiers, alpha, testdata, featurenames):
         resultdict = Counter([row[i] for row in tmpresults]) #possible results for no.i obj in testdata
         votes = {}
         for key in resultdict.keys():#assume the key is the correct category for no.i obj in testdata
-            vote = [alpha[tmpresults.index(result)] for result in tmpresults if result[i] == key ]
+#            vote = [alpha[tmpresults.index(result)] for result in tmpresults if result[i] == key ]
+            vote = [alpha[j] for j in range(0, len(tmpresults)) if tmpresults[j][i] == key]
             votes[key] = sum(vote)
         max_item = max(votes.items(), key = lambda item:item[1]) #find the item with biggest value
         results.append(max_item[0])
@@ -285,22 +296,27 @@ def adaboost(data, featurenames, method, k = 0, preprune = False, postprune = Fa
         classifiers.append(tree)
         (result, errorcount) = classifydata(tree, data, featurenames)
         
-        isequal = lambda x, y: (x == y)*1 #0,1
+        notequal = lambda x, y: (x != y)*1 #0,1
         epsilon = 0
         for j in range(0, len(data)):
-            epsilon += weight[j]*isequal(data[j][-1], result[j])
+            epsilon += weight[j]*notequal(data[j][-1], result[j])
+        if epsilon == 0: #no idea how to deal with this situation,maybe overfitted,just drop it
+            classifiers.pop()
+            continue
         epsilon /= len(data)
         if epsilon > 0.5:
             weight = [1/len(data)]*len(data)
+            classifiers.pop()
             continue
-        alpha.append(1/2*log((1 - epsilon)/epsilon))
+        alpha.append(1/2*log((1 - epsilon)/(epsilon + 0)))
         
-        getcoefficient = lambda x,y: ((x != y)-0.5)/0.5 #-1,1
-        weight = [exp(getcoefficient(data[j][-1], result[j])*alpha[-1])*weight[j] for i in range(0, len(data))]
+        getcoefficient = lambda x,y: ((x != y)-0.5)/0.5 #when equal,coefficient = -1;otherwise,coefficient = 1
+        weight = [exp(getcoefficient(data[j][-1], result[j])*alpha[-1])*weight[j] for j in range(0, len(data))]
         Z = sum(weight)
         weight = [w/Z for w in weight]
         
         i += 1
+#    print(alpha)
     return(classifiers,alpha)
         
     

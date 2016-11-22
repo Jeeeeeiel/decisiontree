@@ -7,7 +7,8 @@ Created on Sun Nov 20 19:51:14 2016
 """
 
 from evaluation import test
-
+import decisiontree as dt
+import numpy as np
 #Attribute Values:
 #
 #buying       v-high, high, med, low
@@ -47,10 +48,12 @@ if __name__ == '__main__':
             data[i][j] = values[j].index(data[i][j])
             
     data = [list(map(int,row[:-1]))+[row[-1][:-1]] for row in data]
-#    print(data)            
+
+#    print(data)    
+    
 
     featurenames = ['buying', 'maint', 'doors', 'persons' ,'lug_boot', 'safety', 'class']
-    method = 'gini' #'gini','entropy','classificationerror'
+    method = 'entropy' #'gini','entropy','classificationerror'
     
 #    tree = dt.train(data, featurenames, method)
 #    
@@ -62,6 +65,6 @@ if __name__ == '__main__':
 #    
 #    accuracy = 1 - errorcount / len(data)
 #    print('accuracy: ', accuracy)
-    test(data = data, featurenames = featurenames, adaboostOn = False, preprune = False, postprune = False, threshold = 0.5)
+    test(data = data, featurenames = featurenames, adaboostOn = True, k=50, preprune = False, postprune = False, threshold = 0.1)
 
     print('done')
