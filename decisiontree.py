@@ -133,14 +133,10 @@ def treegrowth(data, featureleft, method, preprune, threshold):
 #        if len(data) <=4:
 #            print('data1: ', data1)
 #            print('data2: ', data2)
-        if len(data1)==0 or len(data2)==0:#the col for splite is only one unique value,not fixed yet,still dont know why
-            print(len(data1))
-            print(data1)
-            print(len(data2))
-            print(data2)
-            print(node.feature)
-            print(featureindex)
-            print(featureleft)
+        if len(data1)==0 or len(data2)==0:#the col for splite is only one unique value, equals to not split
+            node.nodetype = 'leaf'
+            node.label = classify(data)
+            return(node)
         #remove column in data
         data1 = [[row[i] for i in range(0, len(data1[0])) if i != featureindex] for row in data1 ]
         data2 = [[row[i] for i in range(0, len(data2[0])) if i != featureindex] for row in data2 ]
